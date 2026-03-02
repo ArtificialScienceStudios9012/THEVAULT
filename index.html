@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Vault | Friends Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            transition: border-color 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(34, 211, 238, 0.4);
+        }
+        #custom-cursor {
+            width: 20px; height: 20px; border: 2px solid #22d3ee; 
+            border-radius: 50%; position: fixed; pointer-events: none; 
+            transition: transform 0.1s ease; z-index: 9999;
+        }
+        .neon-text { text-shadow: 0 0 10px rgba(34, 211, 238, 0.6); }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } 
+            from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnXkVUGcNkU6rH0VY0Pi98cqlZKGpqEMQ",
+            authDomain: "march-special.firebaseapp.com",
+            databaseURL: "https://march-special-default-rtdb.firebaseio.com",
+            projectId: "march-special",
+            storageBucket: "march-special.firebasestorage.app",
+            messagingSenderId: "38314477914",
+            appId: "1:38314477914:web:7cc8881c404f83fb8b8b63",
+            measurementId: "G-BYN4V0CYS5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Making Firebase accessible to script.js
+        window.db = db;
+        window.dbFunctions = { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp };
+    </script>
+</head>
+<body class="p-6 md:p-12">
+
+    <div id="custom-cursor"></div>
+
+    <header class="max-w-6xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <h1 class="text-6xl font-black neon-text tracking-tighter text-cyan-400">THE VAULT.</h1>
+            <p class="text-slate-400 font-medium">Locked memories for the inner circle.</p>
+        </div>
+        <div class="glass-card px-6 py-2 text-xs font-bold tracking-[0.3em] uppercase opacity-70">
+            SYSTEM ONLINE • 2026
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="glass-card p-8 md:col-span-2 row-span-2 flex flex-col" data-tilt>
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                The Live Wall
+            </h2>
+            
+            <div id="wall-messages" class="space-y-4 h-[400px] overflow-y-auto pr-4 mb-6 custom-scrollbar">
+                <p class="text-slate-500 animate-pulse text-center mt-20">Loading memories...</p>
+            </div>
+
+            <div class="mt-auto flex gap-3 p-2 bg-white/5 rounded-2xl border border-white/10">
+                <input id="message-input" type="text" placeholder="Write a secret or a roast..." 
+                    class="w-full bg-transparent px-4 py-3 focus:outline-none text-cyan-100">
+                <button id="post-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-black px-8 py-3 rounded-xl transition-all active:scale-95">
+                    SEND
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card p-8 flex flex-col items-center justify-center text-center" data-tilt>
+            <h3 class="text-slate-500 uppercase text-[10px] tracking-widest mb-2 font-bold">Countdown to Chaos</h3>
+            <div id="countdown" class="text-4xl font-black text-white tabular-nums">00:00:00:00</div>
+            <p class="text-[9px] mt-3 text-cyan-500/50 font-bold uppercase tracking-widest">D : H : M : S</p>
+        </div>
+
+        <div class="glass-card p-8 group cursor-pointer" data-tilt>
+            <h3 class="text-slate-500 text-[10px] tracking-widest font-bold mb-4 uppercase">Currently Spinnin'</h3>
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-tr from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center animate-spin-slow shadow-lg shadow-cyan-500/20">
+                    <span class="text-2xl text-black font-bold">💿</span>
+                </div>
+                <div>
+                    <p class="text-lg font-bold group-hover:text-cyan-400 transition">Starboy</p>
+                    <p class="text-xs text-slate-500">The Weeknd</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 group" data-tilt>
+            <div class="relative h-44 w-full rounded-2xl overflow-hidden bg-slate-800">
+                <img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=500&q=80" 
+                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-110 group-hover:scale-100">
+                <div class="absolute inset-0 bg-cyan-500/10 mix-blend-overlay"></div>
+            </div>
+            <p class="text-center mt-4 text-xs font-bold text-slate-400 italic">"The OG Squad ⚡"</p>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
