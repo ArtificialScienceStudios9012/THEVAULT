@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Vault | Friends Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Vault | Final Access</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -12,96 +12,178 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background: #0f172a;
             background: radial-gradient(circle at top left, #1e293b, #0f172a);
             color: white;
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent; /* Mobile tap blue box remove */
+            margin: 0;
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent;
         }
+
+        /* --- LOADING SCREEN --- */
+        #loading-overlay {
+            position: fixed; inset: 0; background: #0f172a;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        .vault-dial {
+            position: relative; width: 60px; height: 60px; margin-bottom: 20px;
+            border: 3px solid #1e293b; border-radius: 50%;
+        }
+
+        .vault-dial::after {
+            content: ''; position: absolute; top: 4px; left: 50%;
+            width: 3px; height: 26px; background: #22d3ee; border-radius: 2px;
+            transform-origin: bottom center; transform: translateX(-50%);
+            animation: spinDial 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spinDial {
+            from { transform: translateX(-50%) rotate(0deg); }
+            to { transform: translateX(-50%) rotate(360deg); }
+        }
+
+        /* --- SKELETON LOADING --- */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%; animation: loading 1.5s infinite;
+            border-radius: 12px; height: 60px; width: 100%;
+        }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        #main-wrapper { opacity: 0; transition: opacity 0.8s ease-in; }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
         }
-        .neon-text { text-shadow: 0 0 10px rgba(34, 211, 238, 0.6); }
-        
-        /* Custom Scrollbar for messages */
+
+        @media (min-width: 768px) { .glass-card { backdrop-filter: blur(15px); } }
+
+        .neon-text { text-shadow: 0 0 10px rgba(34, 211, 238, 0.4); }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 10px; }
     </style>
 
     <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, serverTimestamp } 
-    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // 1. LOGIN SECURITY CHECK
+        if(!localStorage.getItem('vault_user')) {
+            window.location.href = 'login.html';
+        }
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDnXkVUGcNkU6rH0VY0Pi98cqlZKGpqEMQ",
-    authDomain: "march-special.firebaseapp.com",
-    databaseURL: "https://march-special-default-rtdb.firebaseio.com",
-    projectId: "march-special",
-    storageBucket: "march-special.firebasestorage.app",
-    messagingSenderId: "38314477914",
-    appId: "1:38314477914:web:7cc8881c404f83fb8b8b63",
-    measurementId: "G-BYN4V0CYS5"
-  };
+        // 2. FIREBASE INITIALIZATION
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, serverTimestamp, remove, get } 
+            from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnXkVUGcNkU6rH0VY0Pi98cqlZKGpqEMQ",
+            authDomain: "march-special.firebaseapp.com",
+            databaseURL: "https://march-special-default-rtdb.firebaseio.com",
+            projectId: "march-special",
+            storageBucket: "march-special.firebasestorage.app",
+            messagingSenderId: "38314477914",
+            appId: "1:38314477914:web:7cc8881c404f83fb8b8b63",
+            measurementId: "G-BYN4V0CYS5"
+        };
 
-  // Inhe window object mein save kar rahe hain taaki script.js use kar sake
-  window.db = db;
-  window.dbFunctions = { ref, push, onValue, serverTimestamp };
-</script>
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Exposing to window for script.js
+        window.db = db;
+        window.dbFunctions = { ref, push, onValue, serverTimestamp, remove, get };
+    </script>
 </head>
 <body class="p-4 md:p-12">
 
-    <header class="max-w-6xl mx-auto mb-8">
-        <h1 class="text-4xl md:text-6xl font-black neon-text text-cyan-400 tracking-tighter">THE VAULT.</h1>
-        <p class="text-slate-400 text-sm mt-1">Locked memories for the squad.</p>
-    </header>
+    <div id="loading-overlay">
+        <div class="vault-dial"></div>
+        <div class="font-black tracking-[4px] text-cyan-400 text-lg uppercase">The Vault</div>
+        <p class="text-slate-500 text-[8px] mt-4 uppercase tracking-[4px] animate-pulse">Syncing Database...</p>
+    </div>
 
-    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        <div class="glass-card p-5 md:p-8 md:col-span-2 flex flex-col order-2 md:order-1">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-cyan-300">
-                <span class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
-                Live Wall
-            </h2>
+    <div id="main-wrapper" class="max-w-6xl mx-auto">
+        <header class="mb-8 flex justify-between items-start">
+            <div>
+                <h1 class="text-4xl md:text-7xl font-black neon-text text-cyan-400 tracking-tighter uppercase">The Vault.</h1>
+                <p id="welcome-user" class="text-slate-400 text-[10px] md:text-sm mt-2 uppercase tracking-widest opacity-70">Authorizing...</p>
+            </div>
+            <button onclick="localStorage.clear(); location.reload();" 
+                class="text-[9px] font-bold border border-white/10 px-4 py-2 rounded-full text-slate-500 hover:text-red-400 hover:border-red-400/30 transition-all">
+                EXIT SESSION
+            </button>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <div id="wall-messages" class="space-y-3 h-[350px] overflow-y-auto pr-2 mb-4 custom-scrollbar">
-                <p class="text-slate-500 text-center mt-10">Loading messages...</p>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <input id="message-input" type="text" placeholder="Drop a roast or secret..." 
-                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500 text-sm">
-                <button id="post-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl transition-transform active:scale-95">
-                    POST MESSAGE
-                </button>
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-4 order-1 md:order-2">
-            <div class="glass-card p-6 text-center">
-                <h3 class="text-slate-500 uppercase text-[10px] tracking-widest font-bold mb-1">Reunion In</h3>
-                <div id="countdown" class="text-3xl font-black text-white tabular-nums">00:00:00:00</div>
-            </div>
-
-            <div class="glass-card p-6 flex items-center gap-4">
-                <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center animate-spin-slow">
-                    💿
+            <div class="glass-card p-6 md:p-8 md:col-span-2 flex flex-col order-2 md:order-1 shadow-2xl">
+                <h2 class="text-lg font-bold mb-6 flex items-center gap-3 text-cyan-300 uppercase tracking-tighter">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span class="bg-cyan-500 rounded-full h-2 w-2"></span>
+                    </span>
+                    Real-time Feed
+                </h2>
+                
+                <div id="wall-messages" class="space-y-4 h-[380px] overflow-y-auto pr-3 mb-6 custom-scrollbar">
+                    <div class="skeleton"></div>
+                    <div class="skeleton opacity-50"></div>
+                    <div class="skeleton opacity-20"></div>
                 </div>
-                <div>
-                    <p class="text-md font-bold text-white">Group Vibes</p>
-                    <p class="text-[10px] text-slate-500 uppercase">March Playlist 2026</p>
+
+                <div class="mt-auto group">
+                    <div class="flex flex-col gap-3 p-1 bg-white/5 rounded-2xl border border-white/5 focus-within:border-cyan-500/50 transition-all">
+                        <input id="message-input" type="text" placeholder="Share a secret or a roast..." 
+                            class="w-full bg-transparent px-5 py-4 focus:outline-none text-sm text-cyan-50">
+                        <button id="post-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-xl transition-all active:scale-95 shadow-lg shadow-cyan-500/20 uppercase tracking-widest text-xs">
+                            Transmit Data
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-    </main>
+            <div class="flex flex-col gap-6 order-1 md:order-2">
+                <div class="glass-card p-8 text-center border-t-2 border-t-cyan-500/50">
+                    <h3 class="text-slate-500 uppercase text-[9px] tracking-[3px] font-bold mb-3">Time Remaining</h3>
+                    <div id="countdown" class="text-4xl font-black text-white tabular-nums tracking-tighter">00:00:00:00</div>
+                </div>
 
+                <div class="glass-card p-6 flex items-center gap-5 hover:bg-white/5 transition-colors cursor-pointer">
+                    <div class="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center animate-spin">💿</div>
+                    <div>
+                        <p class="text-md font-bold text-white">Squad Vibe</p>
+                        <p class="text-[9px] text-cyan-400/60 uppercase tracking-widest mt-1">Status: Online</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            const user = localStorage.getItem('vault_user') || 'Agent';
+            document.getElementById('welcome-user').innerText = `ACCESS GRANTED: ${user}`;
+            
+            setTimeout(() => {
+                const loader = document.getElementById('loading-overlay');
+                const main = document.getElementById('main-wrapper');
+                
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.visibility = 'hidden';
+                    main.style.opacity = '1';
+                    document.body.style.overflow = 'auto';
+                }, 500);
+            }, 2000);
+        });
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>
