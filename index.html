@@ -6,7 +6,6 @@
     <title>The Vault | Friends Hub</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
@@ -16,24 +15,20 @@
             background: radial-gradient(circle at top left, #1e293b, #0f172a);
             color: white;
             min-height: 100vh;
-            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent; /* Mobile tap blue box remove */
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            transition: border-color 0.3s ease;
-        }
-        .glass-card:hover {
-            border-color: rgba(34, 211, 238, 0.4);
-        }
-        #custom-cursor {
-            width: 20px; height: 20px; border: 2px solid #22d3ee; 
-            border-radius: 50%; position: fixed; pointer-events: none; 
-            transition: transform 0.1s ease; z-index: 9999;
+            border-radius: 20px;
         }
         .neon-text { text-shadow: 0 0 10px rgba(34, 211, 238, 0.6); }
+        
+        /* Custom Scrollbar for messages */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 10px; }
     </style>
 
     <script type="module">
@@ -55,72 +50,53 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Making Firebase accessible to script.js
         window.db = db;
         window.dbFunctions = { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp };
     </script>
 </head>
-<body class="p-6 md:p-12">
+<body class="p-4 md:p-12">
 
-    <div id="custom-cursor"></div>
-
-    <header class="max-w-6xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-            <h1 class="text-6xl font-black neon-text tracking-tighter text-cyan-400">THE VAULT.</h1>
-            <p class="text-slate-400 font-medium">Locked memories for the inner circle.</p>
-        </div>
-        <div class="glass-card px-6 py-2 text-xs font-bold tracking-[0.3em] uppercase opacity-70">
-            SYSTEM ONLINE • 2026
-        </div>
+    <header class="max-w-6xl mx-auto mb-8">
+        <h1 class="text-4xl md:text-6xl font-black neon-text text-cyan-400 tracking-tighter">THE VAULT.</h1>
+        <p class="text-slate-400 text-sm mt-1">Locked memories for the squad.</p>
     </header>
 
-    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+    <main class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        <div class="glass-card p-8 md:col-span-2 row-span-2 flex flex-col" data-tilt>
-            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+        <div class="glass-card p-5 md:p-8 md:col-span-2 flex flex-col order-2 md:order-1">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-cyan-300">
                 <span class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
-                The Live Wall
+                Live Wall
             </h2>
             
-            <div id="wall-messages" class="space-y-4 h-[400px] overflow-y-auto pr-4 mb-6 custom-scrollbar">
-                <p class="text-slate-500 animate-pulse text-center mt-20">Loading memories...</p>
+            <div id="wall-messages" class="space-y-3 h-[350px] overflow-y-auto pr-2 mb-4 custom-scrollbar">
+                <p class="text-slate-500 text-center mt-10">Loading messages...</p>
             </div>
 
-            <div class="mt-auto flex gap-3 p-2 bg-white/5 rounded-2xl border border-white/10">
-                <input id="message-input" type="text" placeholder="Write a secret or a roast..." 
-                    class="w-full bg-transparent px-4 py-3 focus:outline-none text-cyan-100">
-                <button id="post-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-black px-8 py-3 rounded-xl transition-all active:scale-95">
-                    SEND
+            <div class="flex flex-col gap-2">
+                <input id="message-input" type="text" placeholder="Drop a roast or secret..." 
+                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500 text-sm">
+                <button id="post-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl transition-transform active:scale-95">
+                    POST MESSAGE
                 </button>
             </div>
         </div>
 
-        <div class="glass-card p-8 flex flex-col items-center justify-center text-center" data-tilt>
-            <h3 class="text-slate-500 uppercase text-[10px] tracking-widest mb-2 font-bold">Countdown to Chaos</h3>
-            <div id="countdown" class="text-4xl font-black text-white tabular-nums">00:00:00:00</div>
-            <p class="text-[9px] mt-3 text-cyan-500/50 font-bold uppercase tracking-widest">D : H : M : S</p>
-        </div>
+        <div class="flex flex-col gap-4 order-1 md:order-2">
+            <div class="glass-card p-6 text-center">
+                <h3 class="text-slate-500 uppercase text-[10px] tracking-widest font-bold mb-1">Reunion In</h3>
+                <div id="countdown" class="text-3xl font-black text-white tabular-nums">00:00:00:00</div>
+            </div>
 
-        <div class="glass-card p-8 group cursor-pointer" data-tilt>
-            <h3 class="text-slate-500 text-[10px] tracking-widest font-bold mb-4 uppercase">Currently Spinnin'</h3>
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-gradient-to-tr from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center animate-spin-slow shadow-lg shadow-cyan-500/20">
-                    <span class="text-2xl text-black font-bold">💿</span>
+            <div class="glass-card p-6 flex items-center gap-4">
+                <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center animate-spin-slow">
+                    💿
                 </div>
                 <div>
-                    <p class="text-lg font-bold group-hover:text-cyan-400 transition">Starboy</p>
-                    <p class="text-xs text-slate-500">The Weeknd</p>
+                    <p class="text-md font-bold text-white">Group Vibes</p>
+                    <p class="text-[10px] text-slate-500 uppercase">March Playlist 2026</p>
                 </div>
             </div>
-        </div>
-
-        <div class="glass-card p-4 group" data-tilt>
-            <div class="relative h-44 w-full rounded-2xl overflow-hidden bg-slate-800">
-                <img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=500&q=80" 
-                    class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-110 group-hover:scale-100">
-                <div class="absolute inset-0 bg-cyan-500/10 mix-blend-overlay"></div>
-            </div>
-            <p class="text-center mt-4 text-xs font-bold text-slate-400 italic">"The OG Squad ⚡"</p>
         </div>
 
     </main>
