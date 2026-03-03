@@ -32,27 +32,28 @@
     </style>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } 
-            from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDnXkVUGcNkU6rH0VY0Pi98cqlZKGpqEMQ",
-            authDomain: "march-special.firebaseapp.com",
-            databaseURL: "https://march-special-default-rtdb.firebaseio.com",
-            projectId: "march-special",
-            storageBucket: "march-special.firebasestorage.app",
-            messagingSenderId: "38314477914",
-            appId: "1:38314477914:web:7cc8881c404f83fb8b8b63",
-            measurementId: "G-BYN4V0CYS5"
-        };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDnXkVUGcNkU6rH0VY0Pi98cqlZKGpqEMQ",
+    authDomain: "march-special.firebaseapp.com",
+    databaseURL: "https://march-special-default-rtdb.firebaseio.com",
+    projectId: "march-special",
+    storageBucket: "march-special.firebasestorage.app",
+    messagingSenderId: "38314477914",
+    appId: "1:38314477914:web:7cc8881c404f83fb8b8b63",
+    measurementId: "G-BYN4V0CYS5"
+  };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-        window.db = db;
-        window.dbFunctions = { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp };
-    </script>
+  // Inhe window object mein save kar rahe hain taaki script.js use kar sake
+  window.db = db;
+  window.dbFunctions = { ref, push, onValue, serverTimestamp };
+</script>
 </head>
 <body class="p-4 md:p-12">
 
