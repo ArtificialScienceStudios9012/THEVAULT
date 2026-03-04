@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Vault | Final Access</title>
+    <title>The Vault | Squad Hub</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -46,38 +46,31 @@
             to { transform: translateX(-50%) rotate(360deg); }
         }
 
-        /* --- SKELETON LOADING --- */
-        .skeleton {
-            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
-            background-size: 200% 100%; animation: loading 1.5s infinite;
-            border-radius: 12px; height: 60px; width: 100%;
-        }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
         #main-wrapper { opacity: 0; transition: opacity 0.8s ease-in; }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
+            border-radius: 24px;
         }
 
         @media (min-width: 768px) { .glass-card { backdrop-filter: blur(15px); } }
 
         .neon-text { text-shadow: 0 0 10px rgba(34, 211, 238, 0.4); }
+        
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 10px; }
     </style>
 
     <script type="module">
-        // 1. LOGIN SECURITY CHECK
+        // 1. SECURITY CHECK
         if(!localStorage.getItem('vault_user')) {
             window.location.href = 'login.html';
         }
 
-        // 2. FIREBASE INITIALIZATION
+        // 2. FIREBASE CORE
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, serverTimestamp, remove, get } 
+        import { getDatabase, ref, push, onValue, serverTimestamp, remove, get, update } 
             from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -92,11 +85,8 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // Exposing to window for script.js
-        window.db = db;
-        window.dbFunctions = { ref, push, onValue, serverTimestamp, remove, get };
+        window.db = getDatabase(app);
+        window.dbFunctions = { ref, push, onValue, serverTimestamp, remove, get, update };
     </script>
 </head>
 <body class="p-4 md:p-12">
@@ -104,42 +94,51 @@
     <div id="loading-overlay">
         <div class="vault-dial"></div>
         <div class="font-black tracking-[4px] text-cyan-400 text-lg uppercase">The Vault</div>
-        <p class="text-slate-500 text-[8px] mt-4 uppercase tracking-[4px] animate-pulse">Syncing Database...</p>
+        <p class="text-slate-500 text-[8px] mt-4 uppercase tracking-[4px] animate-pulse">Syncing Encrypted Feed...</p>
     </div>
 
     <div id="main-wrapper" class="max-w-6xl mx-auto">
-        <header class="mb-8 flex justify-between items-start">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-4xl md:text-7xl font-black neon-text text-cyan-400 tracking-tighter uppercase">The Vault.</h1>
-                <p id="welcome-user" class="text-slate-400 text-[10px] md:text-sm mt-2 uppercase tracking-widest opacity-70">Authorizing...</p>
+                <h1 class="text-5xl md:text-7xl font-black neon-text text-cyan-400 tracking-tighter uppercase">The Vault.</h1>
+                <p id="welcome-user" class="text-slate-400 text-[10px] uppercase tracking-widest mt-1 text-center md:text-left">Authorized Access Only</p>
             </div>
-            <button onclick="localStorage.clear(); location.reload();" 
-                class="text-[9px] font-bold border border-white/10 px-4 py-2 rounded-full text-slate-500 hover:text-red-400 hover:border-red-400/30 transition-all">
-                EXIT SESSION
-            </button>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="goToMyProfile()" 
+                    class="text-[10px] font-black border border-cyan-500/30 px-5 py-2.5 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all uppercase tracking-widest">
+                    My Profile
+                </button>
+                <button onclick="localStorage.clear(); location.reload();" 
+                    class="text-[10px] font-black border border-white/10 px-5 py-2.5 rounded-full text-slate-500 hover:text-red-400 transition-all uppercase tracking-widest">
+                    Logout
+                </button>
+            </div>
         </header>
 
         <main class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <div class="glass-card p-6 md:p-8 md:col-span-2 flex flex-col order-2 md:order-1 shadow-2xl">
-                <h2 class="text-lg font-bold mb-6 flex items-center gap-3 text-cyan-300 uppercase tracking-tighter">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                        <span class="bg-cyan-500 rounded-full h-2 w-2"></span>
-                    </span>
-                    Real-time Feed
-                </h2>
-                
-                <div id="wall-messages" class="space-y-4 h-[380px] overflow-y-auto pr-3 mb-6 custom-scrollbar">
-                    <div class="skeleton"></div>
-                    <div class="skeleton opacity-50"></div>
-                    <div class="skeleton opacity-20"></div>
+            <div class="glass-card p-6 md:p-8 md:col-span-2 flex flex-col shadow-2xl">
+                <div class="mb-6">
+                    <input id="search-bar" type="text" placeholder="🔍 Search roasts, notices or codenames..." 
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-cyan-500/50 text-slate-300 transition-all">
                 </div>
 
-                <div class="mt-auto group">
-                    <div class="flex flex-col gap-3 p-1 bg-white/5 rounded-2xl border border-white/5 focus-within:border-cyan-500/50 transition-all">
-                        <input id="message-input" type="text" placeholder="Share a secret or a roast..." 
-                            class="w-full bg-transparent px-5 py-4 focus:outline-none text-sm text-cyan-50">
+                <div id="wall-messages" class="space-y-4 h-[400px] overflow-y-auto pr-3 mb-6 custom-scrollbar">
+                    <div class="h-12 w-full bg-white/5 animate-pulse rounded-xl"></div>
+                    <div class="h-12 w-full bg-white/5 animate-pulse rounded-xl opacity-50"></div>
+                </div>
+
+                <div class="mt-auto">
+                    <div id="reply-indicator" class="hidden text-[9px] text-cyan-400 bg-cyan-400/5 p-2 rounded-t-xl border-t border-x border-white/10 uppercase tracking-[2px] flex justify-between items-center">
+                        <span id="reply-text">Replying...</span>
+                        <button onclick="window.cancelReply()" class="text-red-500 font-bold px-2 text-sm">×</button>
+                    </div>
+
+                    <div class="flex flex-col gap-2 p-1 bg-white/5 rounded-2xl border border-white/10 focus-within:border-cyan-500/30 transition-all">
+                        <textarea id="message-input" placeholder="Type a notice or roast (Shift+Enter for new line)..." 
+                            class="w-full bg-transparent px-5 py-4 focus:outline-none text-sm text-cyan-50 resize-none h-28 custom-scrollbar"></textarea>
+                        
                         <button id="post-btn" class="bg-cyan-500 hover:bg-cyan-400 text-black font-black py-4 rounded-xl transition-all active:scale-95 shadow-lg shadow-cyan-500/20 uppercase tracking-widest text-xs">
                             Transmit Data
                         </button>
@@ -147,37 +146,39 @@
                 </div>
             </div>
 
-            <div class="flex flex-col gap-6 order-1 md:order-2">
+            <div class="flex flex-col gap-6">
                 <div class="glass-card p-8 text-center border-t-2 border-t-cyan-500/50">
-                    <h3 class="text-slate-500 uppercase text-[9px] tracking-[3px] font-bold mb-3">Time Remaining</h3>
+                    <h3 class="text-slate-500 uppercase text-[9px] tracking-[3px] font-bold mb-3">Reunion Countdown</h3>
                     <div id="countdown" class="text-4xl font-black text-white tabular-nums tracking-tighter">00:00:00:00</div>
                 </div>
 
-                <div class="glass-card p-6 flex items-center gap-5 hover:bg-white/5 transition-colors cursor-pointer">
+                <div class="glass-card p-6 flex items-center gap-5">
                     <div class="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center animate-spin">💿</div>
                     <div>
                         <p class="text-md font-bold text-white">Squad Vibe</p>
-                        <p class="text-[9px] text-cyan-400/60 uppercase tracking-widest mt-1">Status: Online</p>
+                        <p class="text-[9px] text-cyan-400/60 uppercase tracking-widest mt-1 italic">Vibe: Maximum Roast</p>
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
 
     <script>
+        // Navigation Logic
+        function goToMyProfile() {
+            const user = localStorage.getItem('vault_user');
+            if(user) window.location.href = `profile.html?user=${user}`;
+        }
+
         window.addEventListener('load', () => {
             const user = localStorage.getItem('vault_user') || 'Agent';
-            document.getElementById('welcome-user').innerText = `ACCESS GRANTED: ${user}`;
+            document.getElementById('welcome-user').innerText = `Authorized Access: ${user}`;
             
             setTimeout(() => {
-                const loader = document.getElementById('loading-overlay');
-                const main = document.getElementById('main-wrapper');
-                
-                loader.style.opacity = '0';
+                document.getElementById('loading-overlay').style.opacity = '0';
                 setTimeout(() => {
-                    loader.style.visibility = 'hidden';
-                    main.style.opacity = '1';
+                    document.getElementById('loading-overlay').style.visibility = 'hidden';
+                    document.getElementById('main-wrapper').style.opacity = '1';
                     document.body.style.overflow = 'auto';
                 }, 500);
             }, 2000);
